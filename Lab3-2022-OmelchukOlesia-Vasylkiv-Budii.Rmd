@@ -120,3 +120,83 @@ When it comes to selecting one out of three methods for finding confidence inter
 Second and third methods aren't that good, on the other hand, as actually they use the same inequality which is dependent on unknown parameter variance
 
 # Task 4
+
+Repeat parts (2)–(4) of Problem 3 (with corresponding amendments) for a Poisson distribution P(θ).
+Task and Directions remain he same; in other words, you have to check that confidence intervals constructed there
+contain the parameter θ with prescribed probability.
+```{r}
+set.seed(15)
+
+lambda = 5
+
+matrix_size =  c(100, 1000, 10000)
+
+success_count = 0
+
+print_result <- function(lower, upper, sample_mean) {
+  cat("For confidence level", 1 - a, "where n =", n, ":\n")
+    cat("    CI is [", lower, ",", upper, "]\n")
+    cat("    The fraction of CI's containing the parameter is", length(sample_mean[lower <= sample_mean & sample_mean <= upper]) / n, "\n\n\n")
+}
+
+#(2)
+for (n in matrix_size) {
+  x <- matrix(rpois(n*n, lambda), nrow = n)
+  sample_mean <- colMeans(x)
+  sample_sd <- sd(x)
+  
+  for (a in c(0.1, 0.05, 0.01)) {
+    lower <- mean(sample_mean) - qnorm(1 - a/2) * sample_sd / sqrt((n))
+
+    upper <- mean(sample_mean) + qnorm(1 - a/2) * sample_sd / sqrt((n))
+    
+    print_result(lower, upper, sample_mean)
+  }
+
+}
+```
+
+(3)
+```{r}
+#(3)
+for (n in matrix_size) {
+  x <- matrix(rpois(n*n, lambda), nrow = n)
+  sample_mean <- colMeans(x)
+  sample_sd <- sd(x)
+  
+  for (a in c(0.1, 0.05, 0.01)) {
+    #lower <- (mean(sample_mean) * sqrt(n)) / (sqrt(n) + qnorm(1-a/2))
+
+    #upper <- (mean(sample_mean) * sqrt(n)) / (sqrt(n)- qnorm(1-a/2))
+    
+    discriminant <- qnorm(1 - a/2) / n + 4 * mean(sample_mean)
+    
+    lower <-(sqrt(discriminant)/2 - qnorm(1-a/2)/(2*sqrt(n)))^2
+    
+    upper <- (sqrt(discriminant)/2 + qnorm(1-a/2)/(2*sqrt(n)))^2
+    
+    print_result(lower, upper, sample_mean)
+  }
+}
+
+```
+
+(4)
+```{r}
+#(4)
+for (n in matrix_size) {
+  x <- matrix(rpois(n*n, lambda), nrow = n)
+  sample_mean <- colMeans(x)
+  sample_sd <- sd(x)
+
+  for (a in c(0.1, 0.05, 0.01)) {
+    
+    lower <- mean(sample_mean) - sample_sd * qt(1-a/2, n - 1) / sqrt(n)
+    
+    upper <- mean(sample_mean) + sample_sd * qt(1-a/2, n - 1) / sqrt(n)
+    
+    print_result(lower, upper, sample_mean)
+  }
+}
+
+```
