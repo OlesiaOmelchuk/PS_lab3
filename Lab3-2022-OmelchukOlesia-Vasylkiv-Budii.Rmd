@@ -125,13 +125,10 @@ Repeat parts (2)–(4) of Problem 3 (with corresponding amendments) for a Poisso
 Task and Directions remain he same; in other words, you have to check that confidence intervals constructed there
 contain the parameter θ with prescribed probability.
 ```{r}
-set.seed(15)
 
 lambda = 1.5
 
 matrix_size =  c(100, 1000, 10000)
-
-success_count = 0
 
 print_result <- function(lower, upper, sample_mean) {
   cat("For confidence level", 1 - a, "where n =", n, ":\n")
