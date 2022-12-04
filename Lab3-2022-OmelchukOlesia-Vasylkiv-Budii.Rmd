@@ -120,3 +120,84 @@ When it comes to selecting one out of three methods for finding confidence inter
 Second and third methods aren't that good, on the other hand, as actually they use the same inequality which is dependent on unknown parameter variance
 
 # Task 4
+
+Repeat parts (2)–(4) of Problem 3 (with corresponding amendments) for a Poisson distribution P(θ).
+Task and Directions remain he same; in other words, you have to check that confidence intervals constructed there
+contain the parameter θ with prescribed probability.
+```{r}
+set.seed(15)
+
+lambda = 1.5
+
+matrix_size =  c(100, 1000, 10000)
+
+success_count = 0
+
+print_result <- function(lower, upper, sample_mean) {
+  cat("For confidence level", 1 - a, "where n =", n, ":\n")
+    cat("    CI is [", lower, ",", upper, "]\n")
+    cat("    The fraction of CI's containing the parameter is", length(sample_mean[lower <= sample_mean & sample_mean <= upper]) / n, "\n\n\n")
+}
+```
+
+# (2)
+Using the Normal approximation :
+```{r}
+for (n in matrix_size) {
+  x <- matrix(rpois(n*n, lambda), nrow = n)
+  sample_mean <- colMeans(x)
+  sample_sd <- sd(x)
+  
+  for (a in c(0.1, 0.05, 0.01)) {
+    lower <- mean(sample_mean) - qnorm(1 - a/2) * sample_sd / sqrt((n))
+
+    upper <- mean(sample_mean) + qnorm(1 - a/2) * sample_sd / sqrt((n))
+    
+    print_result(lower, upper, sample_mean)
+  }
+}
+```
+
+# (3)
+By solving the $|\overline{X} - \theta| <= \sqrt(\theta/n) * z_\beta$ equation for $\theta$ as follows : 
+$$\overline{X} - \theta <= \sqrt(\theta/n)*z_\beta$$ and $$\overline{X} - \theta >= \sqrt(\theta/n)*z_\beta$$. Solving two quadratic equations $\theta + \sqrt\theta*(z_\beta/\sqrt(n)) - \overline{X}=0$ and  $\theta + \sqrt\theta*(z_\beta/\sqrt(n)) - \overline{X}=0$ and taking proper values for $\theta$, we get $$\theta_1 = (\sqrt(z_\beta^2/n+4*\overline{X}) - z_\beta/\sqrt n)/2$$ and $$\theta_2 = (\sqrt(z_\beta^2/n+4*\overline{X}) + z_\beta/\sqrt n)/2$$. Those are our bounds for $\theta$.
+```{r}
+for (n in matrix_size) {
+  x <- matrix(rpois(n*n, lambda), nrow = n)
+  sample_mean <- colMeans(x)
+  sample_sd <- sd(x)
+  
+  for (a in c(0.1, 0.05, 0.01)) {
+    discriminant <- qnorm(1 - a/2) / n + 4 * mean(sample_mean)
+    
+    lower <-(sqrt(discriminant)/2 - qnorm(1-a/2)/(2*sqrt(n)))^2
+    
+    upper <- (sqrt(discriminant)/2 + qnorm(1-a/2)/(2*sqrt(n)))^2
+    
+    print_result(lower, upper, sample_mean)
+  }
+}
+
+```
+
+# (4)
+Using Students t-distribution for Poisson :
+```{r}
+for (n in matrix_size) {
+  x <- matrix(rpois(n*n, lambda), nrow = n)
+  sample_mean <- colMeans(x)
+  sample_sd <- sd(x)
+
+  for (a in c(0.1, 0.05, 0.01)) {
+    lower <- mean(sample_mean) - sample_sd * qt(1-a/2, n - 1) / sqrt(n)
+    
+    upper <- mean(sample_mean) + sample_sd * qt(1-a/2, n - 1) / sqrt(n)
+    
+    print_result(lower, upper, sample_mean)
+  }
+}
+
+```
+### Conclusion
+
+As in Task 3, we can see that the bigger size of our sample is, the closer is the result of our computations to the expected one. As for the best method of finding the confidence interval for $\theta$, you can see that the results are pretty similar and folow the same tendencies, but when comes to the estimation of $n$ great enough, the third method generates the closest fractions to the expected result, on the opposite of the previous task case.
