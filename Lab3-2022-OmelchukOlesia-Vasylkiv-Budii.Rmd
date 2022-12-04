@@ -6,15 +6,117 @@ output:
     df_print: paged
 ---
 
-# Task 1
+```{r}
+id <- 15
+set.seed(id)
+```
 
+# Task 1
 
 # Task 2
 
+# Task 3 (parameter estimation)
 
-# Task 3
+In problem 3 we have to verify that the interval estimates produced by the known rules indeed contain the parameter with probability equal to the confidence level.\
+Here we have exponential distribution $\mathcal{E}(\lambda)$ with mean $1/\lambda$, so the good estimate of the parameter $\theta := 1/\lambda$ is the sample mean $\overline{x}$. Now let's find confidence intervals for $\theta$ in several different ways.
+
 ```{r}
+theta <- id/10
+alpha_vect <- c(0.1, 0.05, 0.01)
+lambda <- 1/theta
+
+M <- 10000
+N <- 1000
+
+# generate sample of size N, repeat it M times and write the results as N*M matrix
+samples <- matrix(rexp(N*M, lambda), nrow = N)
+# calculate sample mean in each column
+sample_mean <- colMeans(samples)
+# calculate sample standard deviation of each column
+sample_sd <- apply(samples, 2, sd)
+```
+
+```{r}
+# samples[0:10]
+# sample_mean[0:10]
+# sample_sd[0:10]
+```
+
+## Confidence interval for θ formed in 4 different ways:
+
+### 3.1 (using the distribution of the statistics $2λn\overline{X}$)
+
+Let's find the distribution of the statistics $2λn\overline{X}$\
+$$2\lambda n\overline{X} = 2\lambda n\frac{X_1 + ... + X_n}{n} = 2\lambda(X_1 + ... + X_n) = 2\lambda X_1 + ... + 2\lambda X_n$$\
+,where $X_1, ... X_n \sim \mathcal{E}(\lambda)$\
+Then find the distribution of $2\lambda X$: $$F_{2\lambda X}(t) = P(2\lambda X <= t) = P(X <= \frac{t}{2\lambda}) = F_X(\frac{t}{2\lambda})$$\
+$$f_{2\lambda X}(t) = f_X(\frac{t}{2\lambda}) * \frac{1}{2\lambda} = \lambda e^{-\lambda\frac{t}{2\lambda}}*\frac{1}{2\lambda} = \frac{1}{2}e^{-\frac{t}{2}}$$\
+,so $Y = 2\lambda X \sim \mathcal{E}(\frac{1}{2})$\
+Then $2\lambda n\overline{X} = Y_1 + ... + Y_n$, where $Y_1, ..., Y_n \sim \mathcal{E}(\frac{1}{2})$\
+The sum of $n$ rv's with exponential distribution with parameter $\lambda = \frac{1}{2}$ result in gamma distribution: $$2\lambda n\overline{X} \sim \Gamma(n, \frac{1}{2}) \sim \chi_{2n}^{2}$$\
+
+Now let's use quantiles of Chi-squared distribution to get the interval endpoints: $$P(\chi_{\frac{\alpha}{2}}^{2n} <= 2\lambda n\overline{X} <= \chi_{1-\frac{\alpha}{2}}^{2n}) = 1-\alpha$$\
+Then we can solve the inequality and get the confidence interval for $\theta$: $$\frac{2n\overline{X}}{\chi_{1-\frac{\alpha}{2}}^{2n}} <= \theta <= \frac{2n\overline{X}}{\chi_{\frac{\alpha}{2}}^{2n}}$$
+
+```{r}
+for(alpha in alpha_vect){
+  cat("For confidence level", 1-alpha, "\n")
+  cat("    the fraction of CL's containing the parameter is",
+      mean(theta >= 2*N*sample_mean/qchisq(1-alpha/2, 2*N) & theta <= 2*N*sample_mean/qchisq(alpha/2, 2*N)), "\n", sep = " ")
+  cat("    maximal CL length is", 2*N*max(sample_mean)/qchisq(alpha/2, 2*N) - 2*N*max(sample_mean)/qchisq(1-alpha/2, 2*N), "\n", sep = " ")
+  cat("    mean CL length is", 2*N*mean(sample_mean)/qchisq(alpha/2, 2*N) - 2*N*mean(sample_mean)/qchisq(1-alpha/2, 2*N), "\n", sep = " ")
+}
+```
+
+### 3.2 (using the normal approximation for $\overline{X}$)
+
+Now let's use the normal approximation $\mathcal{N}(\mu,\sigma^2)$ for $\overline{X}$; where parameters are $\mu = \theta, \sigma^2=s^2/n$, where $s^2=\theta^2$ is the population variance (variance of the original distribution $\mathcal{E}(\lambda)$). This means that we form the Z-statistics $Z := \sqrt{n}(\overline{X}-\mu)/\sigma = \sqrt{n}(\overline{X}-\theta)/\theta$ and then use the fact that it is approximately standard normal $\mathcal{N}(0,1)$ to find that:\
+$$P(|\theta - \overline{X}| <= z_\beta\theta/\sqrt{n}) = P(|\overline{X}-\theta|\sqrt{n}/\theta <= z_\beta) = P(|Z| <= z_\beta) = 2\beta - 1$$\
+So $\theta$ with is with probability $2\beta -1$ is in the interval: $$\overline{X} - x_\beta\theta/\sqrt{n} <= \theta <= \overline{X} + x_\beta\theta/\sqrt{n}$$\
+The length of this interval will be:\
+$$l = \overline{X} + x_\beta\theta/\sqrt{n} - (\overline{X} - x_\beta\theta/\sqrt{n}) = 2*x_\beta\theta/\sqrt{n}$$\
+
+```{r}
+for(alpha in alpha_vect){
+  cat("For confidence level", 1-alpha, "\n")
+  cat("    the fraction of CL's containing the parameter is",
+      mean(abs(theta - sample_mean) <= qnorm(1 - alpha/2)*theta/sqrt(N)), "\n", sep = " ")
+  cat("    maximal CL length is", 2*qnorm(1 - alpha/2)*theta/sqrt(N), "\n", sep = " ")
+  cat("    mean CL length is", 2*qnorm(1 - alpha/2)*theta/sqrt(N), "\n", sep = " ")
+}
 
 ```
+
+### 3.3 (by solving the double inequality from previous part)
+
+The confidence interval from the previous step uses the unknown variance $s^2=\theta^2$, so we can solve the double inequality
+
+```{r}
+for(alpha in alpha_vect){
+  cat("For confidence level", 1-alpha, "\n")
+  cat("    the fraction of CL's containing the parameter is",
+      mean(theta >= sample_mean/(1 + qnorm(1 - alpha/2)/sqrt(N)) & theta <= sample_mean/(1 - qnorm(1 - alpha/2)/sqrt(N))), "\n", sep = " ")
+  cat("    maximal CL length is", max(sample_mean)/(1 - qnorm(1 - alpha/2)/sqrt(N)) - max(sample_mean)/(1 + qnorm(1 - alpha/2)/sqrt(N)), "\n", sep = " ")
+  cat("    mean CL length is", mean(sample_mean)/(1 - qnorm(1 - alpha/2)/sqrt(N)) - mean(sample_mean)/(1 + qnorm(1 - alpha/2)/sqrt(N)), "\n", sep = " ")
+}
+```
+
+### 3.4 (using Student t-distribution)
+
+```{r}
+for(alpha in alpha_vect){
+  cat("For confidence level", 1-alpha, "\n")
+  cat("    the fraction of CL's containing the parameter is",
+      mean(abs(theta - sample_mean) <= qt(1-alpha/2, N-1)*sample_sd/sqrt(N)), "\n", sep = " ")
+  cat("    maximal CL length is", 2*qt(1-alpha/2, N-1)*max(sample_sd)/sqrt(N), "\n", sep = " ")
+  cat("    mean CL length is", 2*qt(1-alpha/2, N-1)*mean(sample_sd)/sqrt(N), "\n", sep = " ")
+}
+```
+
+### Conclusion
+
+While testing on different values for M and N we can see that the bigger value, the closer the empirical fraction of CL's containing the parameter is to the actual confidence level.\
+When it comes to selecting one out of three methods for finding confidence interval for parameter $\theta:= 1/\lambda$ for exponential distribution, based on the results we can see that first method works the best and gives the closest values to the actual confidence levels. This is because the sum of rv's with exponential distribution can be easily described as Gamma distribution and than as Chi-squared distribution.\
+Second and third methods aren't that good, on the other hand, as actually they use the same inequality which is dependent on unknown parameter variance
 
 # Task 4
