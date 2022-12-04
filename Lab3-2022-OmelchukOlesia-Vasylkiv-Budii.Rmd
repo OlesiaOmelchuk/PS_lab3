@@ -157,7 +157,7 @@ for (n in matrix_size) {
 
 # (3)
 By solving the $|\overline{X} - \theta| <= \sqrt(\theta/n) * z_\beta$ equation for $\theta$ as follows : 
-$$\overline{X} - \theta <= \sqrt(\theta/n)*z_\beta$$ and $$\overline{X} - \theta >= \sqrt(\theta/n)*z_\beta$$. Solving two quadratic equations $\theta + \sqrt\theta*(z_\beta/\sqrt(n)) - \overline{X}=0$ and  $\theta + \sqrt\theta*(z_\beta/\sqrt(n)) - \overline{X}=0$ and taking proper values for $\theta$, we get $$\theta_1 = (\sqrt(z_\beta^2/n+4*\overline{X}) - z_\beta/\sqrt n)/2$$ and $$\theta_2 = (\sqrt(z_\beta^2/n+4*\overline{X}) + z_\beta/\sqrt n)/2$$. Those are our bounds for $\theta$.
+$$\overline{X} - \theta <= \sqrt(\theta/n)*z_\beta$$ and $$\overline{X} - \theta >= \sqrt(\theta/n)*z_\beta$$. Solving two quadratic equations $\theta + \sqrt\theta*(z_\beta/\sqrt(n)) - \overline{X}=0$ and  $\theta - \sqrt\theta*(z_\beta/\sqrt(n)) - \overline{X}=0$ and taking proper values for $\theta$, we get $$\theta_1 = (\sqrt(z_\beta^2/n+4*\overline{X}) - z_\beta/\sqrt n)/2$$ and $$\theta_2 = (\sqrt(z_\beta^2/n+4*\overline{X}) + z_\beta/\sqrt n)/2$$. Those are our bounds for $\theta$.
 ```{r}
 for (n in matrix_size) {
   x <- matrix(rpois(n*n, lambda), nrow = n)
