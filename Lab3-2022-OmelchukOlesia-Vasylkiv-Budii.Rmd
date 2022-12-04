@@ -1,0 +1,20 @@
+---
+title: 'P&S-2022: Lab assignment 3'
+author: "Omelchuk Olesia, Vasylkiv Dmytro, Budii Tetiana"
+output:
+  html_document:
+    df_print: paged
+---
+
+# Task 1
+
+
+# Task 2
+
+
+# Task 3
+```{r}
+
+```
+
+# Task 4
