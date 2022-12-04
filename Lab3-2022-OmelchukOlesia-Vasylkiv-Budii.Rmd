@@ -127,7 +127,7 @@ contain the parameter θ with prescribed probability.
 ```{r}
 set.seed(15)
 
-lambda = 5
+lambda = 1.5
 
 matrix_size =  c(100, 1000, 10000)
 
@@ -138,8 +138,11 @@ print_result <- function(lower, upper, sample_mean) {
     cat("    CI is [", lower, ",", upper, "]\n")
     cat("    The fraction of CI's containing the parameter is", length(sample_mean[lower <= sample_mean & sample_mean <= upper]) / n, "\n\n\n")
 }
+```
 
-#(2)
+# (2)
+Using the Normal approximation :
+```{r}
 for (n in matrix_size) {
   x <- matrix(rpois(n*n, lambda), nrow = n)
   sample_mean <- colMeans(x)
@@ -152,23 +155,19 @@ for (n in matrix_size) {
     
     print_result(lower, upper, sample_mean)
   }
-
 }
 ```
 
-(3)
+# (3)
+By solving the $|\overline{X} - \theta| <= \sqrt(\theta/n) * z_\beta$ equation for $\theta$ as follows : 
+$$\overline{X} - \theta <= \sqrt(\theta/n)*z_\beta$$ and $$\overline{X} - \theta >= \sqrt(\theta/n)*z_\beta$$. Solving two quadratic equations $\theta + \sqrt\theta*(z_\beta/\sqrt(n)) - \overline{X}=0$ and  $\theta + \sqrt\theta*(z_\beta/\sqrt(n)) - \overline{X}=0$ and taking proper values for $\theta$, we get $$\theta_1 = (\sqrt(z_\beta^2/n+4*\overline{X}) - z_\beta/\sqrt n)/2$$ and $$\theta_2 = (\sqrt(z_\beta^2/n+4*\overline{X}) + z_\beta/\sqrt n)/2$$. Those are our bounds for $\theta$.
 ```{r}
-#(3)
 for (n in matrix_size) {
   x <- matrix(rpois(n*n, lambda), nrow = n)
   sample_mean <- colMeans(x)
   sample_sd <- sd(x)
   
   for (a in c(0.1, 0.05, 0.01)) {
-    #lower <- (mean(sample_mean) * sqrt(n)) / (sqrt(n) + qnorm(1-a/2))
-
-    #upper <- (mean(sample_mean) * sqrt(n)) / (sqrt(n)- qnorm(1-a/2))
-    
     discriminant <- qnorm(1 - a/2) / n + 4 * mean(sample_mean)
     
     lower <-(sqrt(discriminant)/2 - qnorm(1-a/2)/(2*sqrt(n)))^2
@@ -181,16 +180,15 @@ for (n in matrix_size) {
 
 ```
 
-(4)
+# (4)
+Using Students t-distribution for Poisson :
 ```{r}
-#(4)
 for (n in matrix_size) {
   x <- matrix(rpois(n*n, lambda), nrow = n)
   sample_mean <- colMeans(x)
   sample_sd <- sd(x)
 
   for (a in c(0.1, 0.05, 0.01)) {
-    
     lower <- mean(sample_mean) - sample_sd * qt(1-a/2, n - 1) / sqrt(n)
     
     upper <- mean(sample_mean) + sample_sd * qt(1-a/2, n - 1) / sqrt(n)
@@ -200,3 +198,6 @@ for (n in matrix_size) {
 }
 
 ```
+### Conclusion
+
+As in Task 3, we can see that the bigger size of our sample is, the closer is the result of our computations to the expected one. As for the best method of finding the confidence interval for $\theta$, you can see that the results are pretty similar and folow the same tendencies, but when comes to the estimation of $n$ great enough, the third method generates the closest fractions to the expected result, on the opposite of the previous task case.
